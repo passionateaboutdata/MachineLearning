@@ -1,0 +1,44 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# Load the training data
+df = pd.read_csv('/mnt/data/train.csv')
+print("Data preview:")
+print(df.head())
+
+# --- Data Preprocessing ---
+# For this example, we assume the following:
+# - The target variable is named "Survived"
+# - Useful features include: "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"
+# Adjust these if your dataset is different.
+
+# Fill missing numerical values (e.g. Age, Fare)
+df['Age'].fillna(df['Age'].median(), inplace=True)
+df['Fare'].fillna(df['Fare'].median(), inplace=True)
+
+# Fill missing categorical values (e.g. Embarked)
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+
+# Convert categorical variables into dummy/indicator variables
+df = pd.get_dummies(df, columns=['Sex', 'Embarked'], drop_first=True)
+
+# Select features (dropping columns that are likely not useful such as 'Name', 'Ticket', 'Cabin', etc.)
+features = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare', 'Sex_male', 'Embarked_Q', 'Embarked_S']
+X = df[features]
+y = df['Survived']
+
+# --- Model Training ---
+# Split the dataset into training and test subsets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create and train a logistic regression model
+model = LogisticRegression(max_iter=200)
+model.fit(X_train, y_train)
+
+# --- Evaluation ---
+# Predict on the test set and calculate accuracy
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print("Test accuracy:", accuracy)
